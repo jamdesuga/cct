@@ -31,13 +31,13 @@ Gui Inv: +LastFound +AlwaysOnTop
 IdInv := WinExist()
 Gui Inv: -dpiscale -Caption -Border
 Gui Inv: Color, Black
+Gui Inv: Add, Button, x-10 y-10 w1 h1
 Gui Inv: Add, Button, x221 y221 w60 h60 vMoveButton gClicked HWNDClickMe, click me
 Gui Inv: Show, w500 h500, ClickMeWin
 WinSet, TransColor, Black, ahk_id %IdInv%
 OnMessage(0x200,"MoveButton")
 
 ;----------Displays Status GUI----------
-
 Gui St: -Caption -Border +AlwaysOnTop +LastFound
 WinSet Transparent, 245
 Gui St: Color, 20252d
@@ -53,11 +53,12 @@ Return
 ;######################################################################################################################
 
 ;========================================
-;Tray Menu
+;Tray Menu | its a function because i was testing something lolxd
 ;==============================================================
 SetTrayMenu() {
 Menu, Tray, NoStandard
 Menu, Tray, Add, &Status, TrayStatus
+Menu, Tray, Add, &Mode, TrayMode
 Menu, Tray, Add, &Pause, TrayPause
 Menu, Tray, Add, &Reload, TrayReload
 Menu, Tray, Add, &Exit, TrayExit
@@ -86,6 +87,135 @@ Return ;Ends Start Up
 ;######################################################################################################################
 
 ;========================================
+;Automatic Cursor Mover | Button Clicker
+;==============================================================
+;----------Activates the Click Me GUI and Toggles the Bot----------
+^t::
+SetTimer, WindowSnap, Off
+WinActivate ClickMeWin
+If (modetoggle) {
+    ;Changes mode to Click
+    SetTimer, ModeClick, 0
+}
+Else {
+    ;Changes mode to Move, Default
+    SetTimer, ModeMove, 0
+}
+Return
+
+;==========Mode for Moving cursor==========
+ModeMove:
+If WinActive("ClickMeWin") {
+    MouseGetPos, ModeMoveX1, ModeMoveY1
+    Sleep 20
+    MouseGetPos, ModeMoveX2, ModeMoveY2
+    If ((ModeMoveX1 <> ModeMoveX2) or (ModeMoveY1 <> ModeMoveY2)) {
+        GuiControl, St:, StatusText, MouseMoved, Paused
+        Sleep 10000
+        }
+    Else If (Speed <= 2) {
+        ControlGetPos, X, Y,,,, % "ahk_id" . ClickMe
+        ;----------Use below for random location!----------
+        ;Random, RX, 3, 57
+        ;Random, RY, 3, 57
+        ;Random, Speed, 5, 10
+        
+        ;----------Position the movement to click the Center of the button----------
+        X += 29 ;Replace 29 with %RX%
+        Y += 29 ;Replace 29 with %RY%
+    
+        ;----------Moves Mouse to found button location----------
+        MouseMove, %X%, %Y%, %Speed%
+
+        ;Below fixes unwanted pauses when mouse moves to button at high speeds...
+        X += 1
+        Y += 1
+        MouseMove, %X%, %Y%, 0
+
+        ;----------Status Text----------
+        CoordMode, Mouse, Screen
+        MouseGetPos, MX, MY
+        GuiControl, St:, StatusText, Moving X%MX% Y%MY%
+    }
+        Else If (Speed > 2) {
+        ControlGetPos, X, Y,,,, % "ahk_id" . ClickMe
+        ;----------Use below for random location!----------
+        ;Random, RX, 3, 57
+        ;Random, RY, 3, 57
+        ;Random, Speed, 5, 10
+
+        ;----------Position the movement to click the Center of the button----------
+        X += 29 ;Replace 29 with %RX%
+        Y += 29 ;Replace 29 with %RY%
+
+        ;----------Moves Mouse to found button location----------
+        MouseMove, %X%, %Y%, %Speed%
+
+        ;----------Status Text----------
+        CoordMode, Mouse, Screen
+        MouseGetPos, MX, MY
+        GuiControl, St:, StatusText, Moving X%MX% Y%MY%
+    }
+}
+Return
+
+;==========Mode for Clicking button==========
+ModeClick:
+If WinActive("ClickMeWin") {
+    MouseGetPos, ModeClickX1, ModeClickY1
+    Sleep 20
+    MouseGetPos, ModeClickX2, ModeClickY2
+    If ((ModeClickX1 <> ModeClickX2) or (ModeClickY1 <> ModeClickY2)) {
+        GuiControl, St:, StatusText, MouseMoved, Paused
+        Sleep 10000
+        }
+    Else If (Speed <= 2) {
+        ControlGetPos, X, Y,,,, % "ahk_id" . ClickMe
+        ;----------Use below for random location!----------
+        ;Random, RX, 3, 57
+        ;Random, RY, 3, 57
+        ;Random, Speed, 5, 10
+        
+        ;----------Position the movement to click the Center of the button----------
+        X += 29 ;Replace 29 with %RX%
+        Y += 29 ;Replace 29 with %RY%
+    
+        ;----------Moves Mouse to found button location----------
+        MouseClick, Left, %X%, %Y%, 1, %Speed%
+
+        ;Below fixes unwanted pauses when mouse moves to button at high speeds...
+        X += 1
+        Y += 1
+        MouseMove, %X%, %Y%, 0
+
+        ;----------Status Text----------
+        CoordMode, Mouse, Screen
+        MouseGetPos, MX, MY
+        GuiControl, St:, StatusText, Clicking X%MX% Y%MY%
+    }
+        Else If (Speed > 2) {
+        ControlGetPos, X, Y,,,, % "ahk_id" . ClickMe
+        ;----------Use below for random location!----------
+        ;Random, RX, 3, 57
+        ;Random, RY, 3, 57
+        ;Random, Speed, 5, 10
+
+        ;----------Position the movement to click the Center of the button----------
+        X += 29 ;Replace 29 with %RX%
+        Y += 29 ;Replace 29 with %RY%
+
+        ;----------Moves Mouse to found button location----------
+        MouseClick, Left, %X%, %Y%, 1, %Speed%
+
+        ;----------Status Text----------
+        CoordMode, Mouse, Screen
+        MouseGetPos, MX, MY
+        GuiControl, St:, StatusText, Clicking X%MX% Y%MY%
+    }
+}
+Return
+
+;========================================
 ;Window Snap - Still Buggy :c
 ;==============================================================
 WindowSnap:
@@ -109,25 +239,25 @@ Return
 Clicked:
 SetTimer, WindowSnap, Off
 GuiControl, St:, StatusText, Button Clicked!
-MsgBox,, houh, yay :D, 1
+MsgBox,, you clicked!, yay :D
 Return
 
 ;----------Button to set Mouse Move Speed----------
 SetSpeed:
 SetTimer, WindowSnap, Off
 Gui Spd: Submit
-GuiControl, St:, StatusText, SpeedSet: %Speed%
 Gui Spd: Destroy
 Gui Help: Destroy
+GuiControl, St:, StatusText, SpeedSet: %Speed%
 Sleep 1000
 Return
 
 ;----------Button to close Help GUI----------
 CloseHelp:
 SetTimer, WindowSnap, Off
-GuiControl, St:, StatusText, Closed HelpGUI
 Gui Spd: Destroy
 Gui Help: Destroy
+GuiControl, St:, StatusText, Closed HelpGUI
 Return
 
 ;----------Adds function to move StatusGUI----------
@@ -144,15 +274,28 @@ Return
 
 ;----------Tray Menu Button to toggle StatusGUI----------
 TrayStatus:
+SetTimer, WindowSnap, Off
 sttoggle := !sttoggle
     If (sttoggle) {
-        GuiControl, St:, StatusText, StatusGUI Off
         Gui St: Hide
+        GuiControl, St:, StatusText, StatusGUI Off
     }
     Else {
-        GuiControl, St:, StatusText, StatusGUI On
         Gui St: Show, x%SX% y%SY%
+        GuiControl, St:, StatusText, StatusGUI On
     }
+Return
+
+;----------Tray Menu Button to Pause the script----------
+TrayMode:
+SetTimer, WindowSnap, Off
+modetoggle := !modetoggle
+If (modetoggle) {
+    GuiControl, St:, StatusText, ModeSet: Click
+}
+Else {
+    GuiControl, St:, StatusText, ModeSet: Move
+}
 Return
 
 ;----------Tray Menu Button to Pause the script----------
@@ -219,69 +362,6 @@ Gui Help: Add, Text, Center BackgroundTrans x10 y+0 w100 h20, Ctrl+R: Reload
 Gui Help: Add, Text, Center BackgroundTrans x10 y+0 w100 h20, Ctrl+Q: Exit
 Gui Help: Add, Button, x30 y+5 w60 h20 gCloseHelp, Close
 Gui Help: Show, x100 y100 w120 h175
-Return
-
-;==========Toggle Automatic Clicker | CTRL+T==========
-;----------Activates the invisible GUI and Toggles the Bot----------
-^t::
-SetTimer, WindowSnap, Off
-WinActivate ClickMeWin
-SetTimer, ClickLoop, 0
-Return
-
-ClickLoop:
-If WinActive("ClickMeWin") {
-    MouseGetPos, MoveX1, MoveY1
-    Sleep 20
-    MouseGetPos, MoveX2, MoveY2
-    If ((MoveX1 <> MoveX2) or (MoveY1 <> MoveY2)) {
-        GuiControl, St:, StatusText, MouseMoved, Paused
-        Sleep 10000
-        }
-    Else If (Speed <= 2) {
-        ControlGetPos, X, Y,,,, % "ahk_id" . ClickMe
-        ;----------Use below for random location!----------
-        ;Random, RX, 3, 57
-        ;Random, RY, 3, 57
-        ;Random, Speed, 5, 10
-
-        X += 29 ;Replace with %RX%
-        Y += 29 ;Replace with %RY%
-        MouseMove, %X%, %Y%, %Speed%
-
-        ;Below fixes unwanted pauses when mouse moves to button at high speeds...
-        X += 1 ;Replace with %RX%
-        Y += 1 ;Replace with %RY%
-        MouseMove, %X%, %Y%, 0
-
-        ;----------Click instead of Move----------
-        ;MouseClick, Left, %X%, %Y%, 1, 0
-
-        ;----------Status Text----------
-        CoordMode, Mouse, Screen
-        MouseGetPos, MX, MY
-        GuiControl, St:, StatusText, Clicking X%MX% Y%MY%
-    }
-        Else If (Speed > 2) {
-        ControlGetPos, X, Y,,,, % "ahk_id" . ClickMe
-        ;----------Use below for random location!----------
-        ;Random, RX, 3, 57
-        ;Random, RY, 3, 57
-        ;Random, Speed, 5, 10
-
-        X += 29 ;Replace with %RX%
-        Y += 29 ;Replace with %RY%
-        MouseMove, %X%, %Y%, %Speed%
-
-        ;----------Click instead of Move----------
-        ;MouseClick, Left, %X%, %Y%, 1, 0
-
-        ;----------Status Text----------
-        CoordMode, Mouse, Screen
-        MouseGetPos, MX, MY
-        GuiControl, St:, StatusText, Clicking X%MX% Y%MY%
-    }
-}
 Return
 
 ;==========Disables certain keys that can press the button without clicking==========
